@@ -4,7 +4,7 @@ const autoscalingGroupName = core.getInput('autoscaling_group_name')
 const script = core.getInput('command')
 const region = core.getInput('region')
 
-import { SSMClient, SendCommandCommand, ListCommandInvocationsCommand } from "@aws-sdk/client-ssm"
+const { SSMClient, SendCommandCommand, ListCommandInvocationsCommand } = require("@aws-sdk/client-ssm")
 
 const ssmClient = new SSMClient({ region })
 
