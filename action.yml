@@ -1,0 +1,15 @@
+name: 'aws-ssm-asg-action'
+description: 'Execute commands on EC2 Instances managed by an ASG using SSM'
+inputs:
+  autoscaling_group_name:
+    description: 'Autoscaling group target'
+    required: true
+  script:
+    description: 'Shell script to be executed'
+    required: true
+  region:
+    description: 'AWS region'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
