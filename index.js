@@ -1,7 +1,7 @@
 const core = require('@actions/core');
 
 const autoscalingGroupName = core.getInput('autoscaling_group_name')
-const script = core.getInput('command')
+const script = core.getInput('script')
 const region = core.getInput('region')
 
 const { SSMClient, SendCommandCommand, ListCommandInvocationsCommand } = require("@aws-sdk/client-ssm")
@@ -12,21 +12,30 @@ async function run() {
     console.log(`Executing script ${script} on all instances attached to ASG ${autoscalingGroupName}`)
     
     const response = await ssmClient.send(new SendCommandCommand({
-        Targets: `Key=tag:aws:autoscaling:groupName,Values=${autoscalingGroupName}`,
+        Targets: [
+            {
+                Key: "tag:aws:autoscaling:groupName",
+                Values: [autoscalingGroupName]
+            }
+        ],
         DocumentName: "AWS-RunShellScript",
-        Parameters: `commands=\"${script.replaceAll("\"", "\\\"")}\"`
+        Parameters: {
+            commands: [script.replaceAll("\"", "\\\"")]
+        },
     }))
 
     const commandId = response.Command.CommandId
     console.log(`Request sent. Command ID: ${commandId}. Waiting for completion...`)
 
     while (true) {
+        await new Promise(r => setTimeout(r, 1000));
+
         const results = await ssmClient.send(new ListCommandInvocationsCommand({
             CommandId: commandId,
         }))
 
         const total = results.CommandInvocations.length
-        const done = results.CommandInvocations.filter(c => c.Status == "Success" || c.Status == "Failed")
+        const done = results.CommandInvocations.filter(c => c.Status == "Success" || c.Status == "Failed").length
 
         console.log(`Finished: ${done} / ${total}`)
 
@@ -58,5 +67,6 @@ async function run() {
 run().then(() => {
     console.log("Done")
 }).catch(e => {
+    console.log(e)
     core.setFailed(e.message)
 })
