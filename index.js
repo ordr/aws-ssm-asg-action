@@ -8,7 +8,7 @@ const { SSMClient, SendCommandCommand, ListCommandInvocationsCommand } = require
 
 const ssmClient = new SSMClient({ region })
 
-try {
+async function run() {
     console.log(`Executing script ${script} on all instances attached to ASG ${autoscalingGroupName}`)
     
     const response = await ssmClient.send(new SendCommandCommand({
@@ -53,6 +53,10 @@ try {
 
         core.setFailed("One or more instances reported execution failure");
     }
-} catch (error) {
-  core.setFailed(error.message);
 }
+
+run().then(() => {
+    console.log("Done")
+}).catch(e => {
+    core.setFailed(e.message)
+})
